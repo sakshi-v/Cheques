@@ -1,0 +1,35 @@
+<html>
+<body>
+<center><h2> Welcome to Cheques department </h2></center>
+<br><br><br><br><br>
+<center>
+{% if message %}<p><strong>{{ message }}</strong></p>{% endif %}
+<br>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<h3> Enter the Cheque number </h3>
+
+
+
+<form action="/cheques/mainMenu/chequeStatus/" method="post">
+{% csrf_token %}
+
+
+ {{ form.non_field_errors }}
+<table>
+
+<table>
+<tr><th colspan="2">
+{{ form.cheque_number.errors }}
+
+    {{ form.cheque_number }}
+</tr>
+<tr>
+<td><input type="submit" value="Check status" /></td>
+</form>
+<td><a href="/cheques/mainMenu/"><button type='button'>Cancel</button></a></td>
+</tr>
+</table>
+</center>
+</body>
+</html>
