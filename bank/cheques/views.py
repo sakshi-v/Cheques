@@ -2,14 +2,15 @@ from django.shortcuts import get_object_or_404, render_to_response
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
-from cheques.models import Account, Cheque, ChequeBook
+from cheques.models import Account, Cheque, ChequeBook, Employee, Customer, Transaction
 import datetime
 from datetime import timedelta
-from django.forms.fields import DateField, ChoiceField, MultipleChoiceField
+from django.forms.fields import DateField, TimeField, ChoiceField, MultipleChoiceField
 from django import forms
 from django.forms.widgets import RadioSelect
 
 accn=0
+e_id=0
 
 class ChequePaymentForm(forms.Form):
 	cheque_number=forms.CharField(max_length=50)
@@ -17,7 +18,7 @@ class ChequePaymentForm(forms.Form):
 	cheque_date=forms.DateField(widget=forms.TextInput(attrs={'size':'8'}))
 	payee_name=forms.CharField()
 
-def chequePayment(request):
+def e_chequePayment(request):
 	if request.method == 'POST':
 		form = ChequePaymentForm(request.POST)
 		if form.is_valid():
@@ -47,7 +48,7 @@ def chequePayment(request):
 			cnum=cb.first_cheque_number
 			csize=cb.size + cnum
 			if m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
-				return render_to_response('cheques/chequePayment.html', {
+				return render_to_response('cheques/e_chequePayment.html', {
 					'name': name,
 					'balance': balance,
 					'form': form,
@@ -58,7 +59,7 @@ def chequePayment(request):
 							payee_name=payee_name, micr_number='500002023', account_number_id=acc_id, status='bounced')
 				message="Cheque bounced due to insufficient balance"
 				ch_info.save()	
-				return render_to_response('cheques/mainMenu.html', {
+				return render_to_response('cheques/employeeMenu.html', {
 					'message': message,
 					'form': sform
 				}, context_instance=RequestContext(request))
@@ -67,7 +68,7 @@ def chequePayment(request):
 							payee_name=payee_name, micr_number='500002023', account_number_id=acc_id, status='bounced')
 				message="Cheque bounced due to expired date"
 				ch_info.save()	
-				return render_to_response('cheques/mainMenu.html', {
+				return render_to_response('cheques/employeeMenu.html', {
 					'message': message,
 					'form': sform
 				}, context_instance=RequestContext(request))
@@ -78,7 +79,7 @@ def chequePayment(request):
 							payee_name=payee_name, micr_number='500002023', account_number_id=acc_id, status='processed')
 				message="Cheque processed successfully"	
 				ch_info.save()		
-				return render_to_response('cheques/mainMenu.html', {
+				return render_to_response('cheques/employeeMenu.html', {
 					'message': message,
 					'form': sform
 				}, context_instance=RequestContext(request))
@@ -92,16 +93,88 @@ def chequePayment(request):
 			name=num.name
 			balance=num.balance
 				
-	return render_to_response('cheques/chequePayment.html', {
+	return render_to_response('cheques/e_chequePayment.html', {
 		'name': name,
 		'balance': balance,
 		'form': form,
 	}, context_instance=RequestContext(request))
 
+class EmployeeLoginForm(forms.Form):
+	employee_id = forms.CharField(max_length=50)
+	password = forms.CharField(widget=forms.PasswordInput())
+
+def employeeLogin(request):
+	if request.method == 'POST':
+		form = EmployeeLoginForm(request.POST)
+		form1 = SearchAccountNumberForm();
+		if form.is_valid():
+			employee_id = form.cleaned_data['employee_id']
+			password = form.cleaned_data['password']
+			global e_id
+			n=0
+			empId=employee_id
+			passw=password
+			for num in Employee.objects.all():
+				emp_id=num.employee_id
+				passwrd=num.password
+				if empId==emp_id and passw==passwrd:
+					n=empId
+					e_id=n
+					break
+			if n==0:
+				return render_to_response('cheques/employeeLogin.html', {
+					'form': form,
+					'error_message': "Invalid ID or Password",
+				}, context_instance=RequestContext(request))	
+			else:
+				return render_to_response('cheques/e_searchAccount.html', {'form': form1
+				},  context_instance=RequestContext(request))
+	else:
+		form=EmployeeLoginForm()
+	return render_to_response('cheques/employeeLogin.html', {
+		'form': form			
+    }, context_instance=RequestContext(request))
+
+class CustomerLoginForm(forms.Form):
+	username = forms.CharField(max_length=50)
+	password = forms.CharField(widget=forms.PasswordInput())
+
+def customerLogin(request):
+	if request.method == 'POST':
+		form = CustomerLoginForm(request.POST)
+		if form.is_valid():
+			username = form.cleaned_data['username']
+			password = form.cleaned_data['password']
+			global accn
+			n=0
+			user_name=username
+			passw=password
+			for num in Customer.objects.all():
+				user=num.username
+				passwrd=num.password
+				if user==user_name and passw==passwrd:
+					n=num.account_number
+					break
+			accn = n
+			acc_n=Account.objects.get(account_number=accn)		
+			name=acc_n.name
+			if n==0:
+				return render_to_response('cheques/customerLogin.html', {
+					'form': form,
+					'error_message': "Invalid username or password",
+				}, context_instance=RequestContext(request))	
+			else:
+				return render_to_response('cheques/customerMenu.html', {'name': name})
+	else:
+		form=CustomerLoginForm()
+	return render_to_response('cheques/customerLogin.html', {
+		'form': form			
+    }, context_instance=RequestContext(request))
+
 class SearchAccountNumberForm(forms.Form):
 	account_number = forms.CharField(max_length=50)
 
-def index(request):
+def e_searchAccount(request):
 	if request.method == 'POST':
 		form = SearchAccountNumberForm(request.POST)
 		if form.is_valid():
@@ -116,20 +189,39 @@ def index(request):
 					accn=n
 					break
 			if n==0:
-				return render_to_response('cheques/index.html', {
+				return render_to_response('cheques/e_searchAccount.html', {
 					'form': form,
 					'error_message': "Invalid Account Number",
 				}, context_instance=RequestContext(request))	
 			else:
-				return render_to_response('cheques/mainMenu.html', {'acc': n})
+				return render_to_response('cheques/employeeMenu.html', {'acc': n})
 	else:
 		form=SearchAccountNumberForm()
-	return render_to_response('cheques/index.html', {
+	return render_to_response('cheques/e_searchAccount.html', {
 		'form': form			
-    }, context_instance=RequestContext(request))
+	}, context_instance=RequestContext(request))
 
-def mainMenu(request):
-	return render_to_response('cheques/mainMenu.html', {'acc': accn})
+def employeeMenu(request):
+	return render_to_response('cheques/employeeMenu.html', {'acc': accn})
+
+def logoutCustomer(request):
+	global accn
+	accn=0
+	return render_to_response('cheques/login.html')
+
+def logoutEmployee(request):
+	global accn
+	accn=0
+	return render_to_response('cheques/login.html')
+
+def customerMenu(request):
+	global accn
+	acc_nu=Account.objects.get(account_number=accn)		
+	name=acc_nu.name
+	return render_to_response('cheques/customerMenu.html', {'name': name})
+
+def login(request):
+	return render_to_response('cheques/login.html')
 
 SIZE_CHOICES = (('20', 20), ('50', 50))
 
@@ -138,7 +230,7 @@ class IssueChequeBookForm(forms.Form):
 	value1=datetime.date.today()
 	issueDate=DateField(initial=value1, widget=forms.widgets.HiddenInput())
 	
-def issueChequeBook(request):
+def e_issueChequeBook(request):
 	for num in Account.objects.all():
 		a_num=num.account_number
 		if accn==a_num:
@@ -163,13 +255,13 @@ def issueChequeBook(request):
 				first_ch_num=fch+int(size)
 				ChequeBook.objects.filter(account_number=acc_id).update(account_number=acc_id, 
 							size=size, issue_date=today_date, first_cheque_number=first_ch_num)
-			num_ch_books=num_ch_books+1
+			num_ch_books=int(num_ch_books)+1
 			Account.objects.filter(account_number=accn).update(number_of_chequebooks=num_ch_books)
 			message="Cheque Book Issued"
-			return render_to_response('cheques/mainMenu.html', {'message': message})
+			return render_to_response('cheques/employeeMenu.html', {'message': message})
 	else:
 		form=IssueChequeBookForm()
-	return render_to_response('cheques/issueChequeBook.html', {
+	return render_to_response('cheques/e_issueChequeBook.html', {
 		'name': name,
 		'balance': balance,
 		'accnum': accn,
@@ -179,7 +271,7 @@ def issueChequeBook(request):
 class ChequeCancellationForm(forms.Form):
 	cheque_number=forms.IntegerField()
 	
-def chequeCancellation(request):
+def e_chequeCancellation(request):
 	if request.method == 'POST':
 		form = ChequeCancellationForm(request.POST)
 		if form.is_valid():
@@ -209,12 +301,12 @@ def chequeCancellation(request):
 			csize=cb.size + cnum
 			cheque_date=datetime.date.today()
 			if n!=1:
-				return render_to_response('cheques/mainMenu.html', {
+				return render_to_response('cheques/employeeMenu.html', {
 					'messagee': status,
 					'messa': 1
 				}, context_instance=RequestContext(request))
 			elif m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
-				return render_to_response('cheques/chequeCancellation.html', {
+				return render_to_response('cheques/e_chequeCancellation.html', {
 					'form': form,
 					'name': name,
 					'accnum': accn, 
@@ -224,7 +316,7 @@ def chequeCancellation(request):
 				ch_info=Cheque(cheque_number=cheque_number, date=cheque_date, amount='000',
 							micr_number='500002023', account_number_id=acc_id, status='cancelled')
 				ch_info.save()
-				return render_to_response('cheques/mainMenu.html', {
+				return render_to_response('cheques/employeeMenu.html', {
 					'message': "Cheque has been cancelled",
 				}, context_instance=RequestContext(request))
 			
@@ -236,7 +328,8 @@ def chequeCancellation(request):
 		a_num=num.account_number
 		if accn==a_num:
 			name=num.name
-	return render_to_response('cheques/chequeCancellation.html', {
+	return render_to_response('cheques/e_chequeCancellation.html', {
+				
 		'name': name,
 		'accnum': accn, 
 		'form': form,
@@ -245,7 +338,7 @@ def chequeCancellation(request):
 class ChequeStatusForm(forms.Form):
 	cheque_number = forms.IntegerField()
 
-def chequeStatus(request):
+def e_chequeStatus(request):
 	if request.method == 'POST':
 		form = ChequeStatusForm(request.POST)
 		if form.is_valid():
@@ -273,20 +366,129 @@ def chequeStatus(request):
 			cnum=cb.first_cheque_number
 			csize=cb.size + cnum
 			if n!=1:
-				return render_to_response('cheques/mainMenu.html', {'messag': status, 'mess': 1} )
+				return render_to_response('cheques/employeeMenu.html', {'messag': status, 'mess': 1} )
 			elif m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
-				return render_to_response('cheques/chequeStatus.html', {
+				return render_to_response('cheques/e_chequeStatus.html', {
 					'form': form,
 					'error_message': "Invalid Cheque number",
 				}, context_instance=RequestContext(request))
 			else:
-				return render_to_response('cheques/chequeStatus.html', {
+				return render_to_response('cheques/e_chequeStatus.html', {
 					'form': form,
 					'error_message': "Cheque hasn't received",
 				}, context_instance=RequestContext(request))	
 			
 	else:
 		form=ChequeStatusForm()
-	return render_to_response('cheques/chequeStatus.html', {
+	return render_to_response('cheques/e_chequeStatus.html', {
 		'form': form			
     }, context_instance=RequestContext(request))
+
+
+
+def c_chequeCancellation(request):
+	if request.method == 'POST':
+		form = ChequeCancellationForm(request.POST)
+		if form.is_valid():
+			cheque_number = form.cleaned_data['cheque_number']
+			global accn
+			n=1
+			acc_id=0
+			acc_nu=Account.objects.get(account_number=accn)		
+			name=acc_nu.name
+			acc_id=acc_nu.id
+			for num in Cheque.objects.all():
+				ac_id=num.account_number_id
+				c_num=num.cheque_number
+				if int(cheque_number)==int(c_num) and int(acc_id)==int(ac_id):
+					status=num.status
+					n=cheque_number
+					break	
+			m=0
+			for cn in Cheque.objects.all():
+				a_cn=cn.cheque_number
+				if cheque_number==a_cn:
+					m=1
+			cb=ChequeBook.objects.get(account_number=acc_id)		
+			cnum=cb.first_cheque_number
+			csize=cb.size + cnum
+			cheque_date=datetime.date.today()
+			if n!=1:
+				return render_to_response('cheques/customerMenu.html', {
+					'messagee': status,
+					'messa': 1,
+					'name': name
+				}, context_instance=RequestContext(request))
+			elif m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
+				return render_to_response('cheques/c_chequeCancellation.html', {
+					'form': form,
+					'name': name,
+					'accnum': accn, 
+					'message': "Invalid Cheque number",
+				}, context_instance=RequestContext(request))
+			else:
+				ch_info=Cheque(cheque_number=cheque_number, date=cheque_date, amount='000',
+							micr_number='500002023', account_number_id=acc_id, status='cancelled')
+				ch_info.save()
+				return render_to_response('cheques/customerMenu.html', {
+					'message': "Cheque has been cancelled",
+				}, context_instance=RequestContext(request))
+			
+					
+	else:
+		form=ChequeCancellationForm()
+	acc_n=Account.objects.get(account_number=accn)		
+	name=acc_n.name
+	return render_to_response('cheques/c_chequeCancellation.html', {
+		'name': name,		
+		'accnum': accn, 
+		'form': form,
+		}, context_instance=RequestContext(request))
+
+
+def c_chequeStatus(request):
+	if request.method == 'POST':
+		form = ChequeStatusForm(request.POST)
+		if form.is_valid():
+			cheque_number = form.cleaned_data['cheque_number']
+			global accn
+			n=1
+			acc_id=0
+			acc_nu=Account.objects.get(account_number=accn)		
+			name=acc_nu.name
+			acc_id=acc_nu.id
+			for num in Cheque.objects.all():
+				ac_id=num.account_number_id
+				c_num=num.cheque_number
+				if int(cheque_number)==int(c_num) and int(acc_id)==int(ac_id):
+					status=num.status
+					n=cheque_number
+					break	
+			m=0
+			for cn in Cheque.objects.all():
+				a_cn=cn.cheque_number
+				if cheque_number==a_cn:
+					m=1
+			cb=ChequeBook.objects.get(account_number=acc_id)		
+			cnum=cb.first_cheque_number
+			csize=cb.size + cnum
+			if n!=1:
+				return render_to_response('cheques/customerMenu.html', {'messag': status, 'mess': 1, 'name': name} )
+			elif m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
+				return render_to_response('cheques/c_chequeStatus.html', {
+					'form': form,
+					'error_message': "Invalid Cheque number",
+				}, context_instance=RequestContext(request))
+			else:
+				return render_to_response('cheques/c_chequeStatus.html', {
+					'form': form,
+					'error_message': "Cheque hasn't received",
+				}, context_instance=RequestContext(request))	
+			
+	else:
+		form=ChequeStatusForm()
+	return render_to_response('cheques/c_chequeStatus.html', {
+		'form': form			
+    }, context_instance=RequestContext(request))
+
+

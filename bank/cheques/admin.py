@@ -1,4 +1,4 @@
-from cheques.models import Account, Cheque, ChequeBook
+from cheques.models import Account, Cheque, ChequeBook, Employee, Customer, Transaction
 from django.contrib import admin
 
 class AccountAdmin(admin.ModelAdmin):
@@ -7,3 +7,6 @@ class AccountAdmin(admin.ModelAdmin):
 admin.site.register(Account,AccountAdmin)
 admin.site.register(Cheque)
 admin.site.register(ChequeBook)
+admin.site.register(Employee)
+admin.site.register(Customer)
+admin.site.register(Transaction)
