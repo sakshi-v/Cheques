@@ -1,0 +1,38 @@
+<html>
+<body>
+<center><h2> Issue Cheque-Book </h2></center>
+<br><br><br><br>
+<center>
+{{ size }}
+<table>
+<tr>
+<td align="right">Account number:</td><td>{{ accnum }}</td>
+</tr>
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr>
+<td align="right">Name:</td><td>{{ name }}</td>
+</tr>
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr>
+<td align="right">Balance:</td><td>{{ balance }}</td>
+</tr>
+<tr></tr>
+<form action="/cheques/employeeMenu/e_issueChequeBook/" method="post">
+{% csrf_token %}
+ {{ form.non_field_errors }}
+<tr></tr>
+<tr><th colspan="2">{{ form.size.errors }}</tr>
+<td align="right">Size:</td>
+<td align="left">{{ form.size }}</td>
+</tr>
+<tr> {{ form.issueDate }} </tr>
+<tr></tr>
+<br>
+<tr>
+<td><input type="submit" value="Issue" /></td>
+<td><a href="/cheques/employeeMenu/"><button type="button">Cancel</button></a></td>
+</tr>
+</table>
+</center>
+</body>
+</html>
