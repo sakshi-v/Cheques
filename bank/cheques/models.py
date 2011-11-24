@@ -27,8 +27,8 @@ class ChequeBook(models.Model):
     size = models.IntegerField(max_length=11)
     issue_date = models.DateField('issue date')
     first_cheque_number = models.IntegerField(max_length=6)
-    #def __unicode__(self):
-     #   return self.account_number_id
+    def __unicode__(self):
+        return self.account_number_id
 
 class Employee(models.Model):
     employee_id = models.CharField(max_length=50)

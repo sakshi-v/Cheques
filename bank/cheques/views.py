@@ -12,15 +12,39 @@ from django.forms.widgets import RadioSelect
 accn=0
 e_id=0
 
+## \file views.py
+
+## \namespace pyviews
+
+## Creates a cheque payment form with the fields:
+# cheque number - six digit number present on the cheque, 
+# amount - Amount present on the cheque, 
+# cheque date - Date present on the cheque, 
+# payee name - Payee name present on the cheque, 
+
+
 class ChequePaymentForm(forms.Form):
-	cheque_number=forms.CharField(max_length=50)
+	cheque_number=forms.IntegerField()
 	amount=forms.DecimalField(max_digits=50, decimal_places=2)
 	cheque_date=forms.DateField(widget=forms.TextInput(attrs={'size':'8'}))
 	payee_name=forms.CharField()
 
+
+## User: Employee. Deducts the amount from drawee's account, if cheque number,
+# cheque date and amount entered in the cheque payment form are valid, 
+# else: displays the corresponding error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html" if cheque payment is successful,
+# else: "e_chequePayment.html" with the display of error message
+
 def e_chequePayment(request):
-	if request.method == 'POST':
-		form = ChequePaymentForm(request.POST)
+	global accn
+	accn_r = request.GET.get('account_number','')
+	if accn_r==None:
+		accn_r=accn
+	
+	if request.method == 'POST': 
+		form = ChequePaymentForm(request.POST) 
 		if form.is_valid():
 			global accn
 			cheque_number = form.cleaned_data['cheque_number']
@@ -33,7 +57,7 @@ def e_chequePayment(request):
 			acc_id=0
 			for num in Account.objects.all():
 				a_num=num.account_number
-				if accn==a_num:
+				if accn_r==a_num:
 					name=num.name
 					balance=num.balance
 					acc_id=num.id
@@ -41,20 +65,23 @@ def e_chequePayment(request):
 			m=0
 			for cn in Cheque.objects.all():
 				a_cn=cn.cheque_number
-				if cheque_number==a_cn:
+				if int(cheque_number)==int(a_cn):
 					m=1
 			sform=SearchAccountNumberForm()
 			cb=ChequeBook.objects.get(account_number=acc_id)		
 			cnum=cb.first_cheque_number
 			csize=cb.size + cnum
+			
 			if m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
 				return render_to_response('cheques/e_chequePayment.html', {
 					'name': name,
 					'balance': balance,
 					'form': form,
-					'message': "Invalid cheque number"
+					'acc_nu': accn_r,
+					'message': "Invalid cheque number",
+					'm': m
 				}, context_instance=RequestContext(request))
-			if balance<amount:
+			elif balance<amount:
 				ch_info=Cheque(cheque_number=cheque_number, date=cheque_date, amount=amount,
 							payee_name=payee_name, micr_number='500002023', account_number_id=acc_id, status='bounced')
 				message="Cheque bounced due to insufficient balance"
@@ -74,7 +101,7 @@ def e_chequePayment(request):
 				}, context_instance=RequestContext(request))
 			else:
 				balance=balance-amount
-				Account.objects.filter(account_number=accn).update(balance=balance)
+				Account.objects.filter(account_number=accn_r).update(balance=balance)
 				ch_info=Cheque(cheque_number=cheque_number, date=cheque_date, amount=amount,
 							payee_name=payee_name, micr_number='500002023', account_number_id=acc_id, status='processed')
 				message="Cheque processed successfully"	
@@ -97,11 +124,24 @@ def e_chequePayment(request):
 		'name': name,
 		'balance': balance,
 		'form': form,
+		'acc_nu': accn_r
 	}, context_instance=RequestContext(request))
+
+## Creates a Employee login form with the following fields:
+# employee id - Id of the employee
+# password -password of the employee
 
 class EmployeeLoginForm(forms.Form):
 	employee_id = forms.CharField(max_length=50)
 	password = forms.CharField(widget=forms.PasswordInput())
+
+
+## \brief User: Employee. Aunthenticates employee username and password. Authentication is
+# successful if username and password are correct, 
+# else: display the error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html" if authentication is successful,
+# else: "employeeLogin.html" with the display of error message
 
 def employeeLogin(request):
 	if request.method == 'POST':
@@ -135,9 +175,21 @@ def employeeLogin(request):
 		'form': form			
     }, context_instance=RequestContext(request))
 
+## Creates a Customer login form with the following fields:
+# customer id - Id of the employee
+# password -password of the employee
+
 class CustomerLoginForm(forms.Form):
 	username = forms.CharField(max_length=50)
 	password = forms.CharField(widget=forms.PasswordInput())
+
+
+## \brief User: Customer. Aunthenticates customer username and password. Authentication is
+# successful if username and password are correct, 
+# else: display the error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "customerMenu.html" if authentication is successful,
+# else: "customerLogin.html" with the display of error message
 
 def customerLogin(request):
 	if request.method == 'POST':
@@ -147,23 +199,21 @@ def customerLogin(request):
 			password = form.cleaned_data['password']
 			global accn
 			n=0
-			user_name=username
-			passw=password
 			for num in Customer.objects.all():
 				user=num.username
 				passwrd=num.password
-				if user==user_name and passw==passwrd:
+				if username==user and password==passwrd:
 					n=num.account_number
 					break
 			accn = n
-			acc_n=Account.objects.get(account_number=accn)		
-			name=acc_n.name
 			if n==0:
 				return render_to_response('cheques/customerLogin.html', {
 					'form': form,
 					'error_message': "Invalid username or password",
 				}, context_instance=RequestContext(request))	
 			else:
+				acc_n=Account.objects.get(account_number=n)		
+				name=acc_n.name
 				return render_to_response('cheques/customerMenu.html', {'name': name})
 	else:
 		form=CustomerLoginForm()
@@ -171,8 +221,18 @@ def customerLogin(request):
 		'form': form			
     }, context_instance=RequestContext(request))
 
+## Creates a form for searching account number with the following field:
+# Enter Account number - Account number of the drawee 
+
 class SearchAccountNumberForm(forms.Form):
 	account_number = forms.CharField(max_length=50)
+
+
+## \brief User: Employee. Searches the Account table in the database for the
+# account number.
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html" if search is successful,
+# else: "e_searchAccount.html" with the display of error message
 
 def e_searchAccount(request):
 	if request.method == 'POST':
@@ -194,25 +254,49 @@ def e_searchAccount(request):
 					'error_message': "Invalid Account Number",
 				}, context_instance=RequestContext(request))	
 			else:
-				return render_to_response('cheques/employeeMenu.html', {'acc': n})
+				return render_to_response('cheques/employeeMenu.html', {'acc_nu': account_number})
 	else:
 		form=SearchAccountNumberForm()
 	return render_to_response('cheques/e_searchAccount.html', {
 		'form': form			
 	}, context_instance=RequestContext(request))
 
+
+## \brief User: Employee. Displays Cheque Menu which will be accessed by employee.
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html"
+
 def employeeMenu(request):
-	return render_to_response('cheques/employeeMenu.html', {'acc': accn})
+	global accn
+	accn_r=accn
+	#accn_r = request.GET.get('account_number')
+	return render_to_response('cheques/employeeMenu.html', {'acc_nu': accn_r})
+	#return render_to_response('cheques/employeeMenu.html', {'acc': accn})
+
+
+## \brief User: Customer. Sets all global variables to zero and displays the login page
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "login.html"
 
 def logoutCustomer(request):
 	global accn
 	accn=0
 	return render_to_response('cheques/login.html')
 
+
+## \brief User: Employee. Sets all global variables to zero and displays the login page
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "login.html"
+
 def logoutEmployee(request):
 	global accn
 	accn=0
 	return render_to_response('cheques/login.html')
+
+
+## \brief User: Customer. Displays Cheque Menu which will be accessed by customer.
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "customerMenu.html"
 
 def customerMenu(request):
 	global accn
@@ -220,20 +304,38 @@ def customerMenu(request):
 	name=acc_nu.name
 	return render_to_response('cheques/customerMenu.html', {'name': name})
 
+
+## \brief User: Employee/Customer. Displays login page.
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "login.html"
+
 def login(request):
 	return render_to_response('cheques/login.html')
 
+## Choices for size of cheque book
 SIZE_CHOICES = (('20', 20), ('50', 50))
+
+## Creates a cheque book issue form with the radio field:
+# size - choices 20 and 50
 
 class IssueChequeBookForm(forms.Form):
 	size=ChoiceField(widget=RadioSelect, choices=SIZE_CHOICES)
 	value1=datetime.date.today()
 	issueDate=DateField(initial=value1, widget=forms.widgets.HiddenInput())
-	
+
+
+## \brief User: Employee. Issues a cheque book of selected size
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html"	
+
 def e_issueChequeBook(request):
+	global accn
+	accn_r = request.GET.get('account_number','')
+	if accn_r==None:
+		accn_r=accn
 	for num in Account.objects.all():
 		a_num=num.account_number
-		if accn==a_num:
+		if accn_r==a_num:
 			name=num.name
 			balance=num.balance
 			acc_id=num.id
@@ -255,23 +357,37 @@ def e_issueChequeBook(request):
 				first_ch_num=fch+int(size)
 				ChequeBook.objects.filter(account_number=acc_id).update(account_number=acc_id, 
 							size=size, issue_date=today_date, first_cheque_number=first_ch_num)
-			num_ch_books=int(num_ch_books)+1
-			Account.objects.filter(account_number=accn).update(number_of_chequebooks=num_ch_books)
+			num_ch_books=num_ch_books+1
+			Account.objects.filter(account_number=accn_r).update(number_of_chequebooks=num_ch_books)
 			message="Cheque Book Issued"
-			return render_to_response('cheques/employeeMenu.html', {'message': message})
+			return render_to_response('cheques/employeeMenu.html', {'message': message, 'acc_nu': accn})
 	else:
 		form=IssueChequeBookForm()
 	return render_to_response('cheques/e_issueChequeBook.html', {
 		'name': name,
 		'balance': balance,
-		'accnum': accn,
+		'acc_nu': accn_r,
 		'form': form			
     }, context_instance=RequestContext(request))
+
+## Creates a cheque cancellation form with the field:
+# cheque number - six digit number present on the cheque
 
 class ChequeCancellationForm(forms.Form):
 	cheque_number=forms.IntegerField()
 	
+
+## \brief User: Employee. Cancels the cheque if cheque number is valid
+# else: display the corresponding error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html" if cheque cancellation is successful,
+# else: "e_chequeCancellation.html" with the display of error message
+
 def e_chequeCancellation(request):
+	global accn
+	accn_r = request.GET.get('account_number','')
+	if accn_r==None:
+		accn_r=accn
 	if request.method == 'POST':
 		form = ChequeCancellationForm(request.POST)
 		if form.is_valid():
@@ -281,7 +397,7 @@ def e_chequeCancellation(request):
 			acc_id=0
 			for num in Account.objects.all():
 				a_num=num.account_number
-				if accn==a_num:
+				if accn_r==a_num:
 					acc_id=num.id
 					name=num.name
 			for num in Cheque.objects.all():
@@ -294,7 +410,7 @@ def e_chequeCancellation(request):
 			m=0
 			for cn in Cheque.objects.all():
 				a_cn=cn.cheque_number
-				if cheque_number==a_cn:
+				if int(cheque_number)==int(a_cn):
 					m=1
 			cb=ChequeBook.objects.get(account_number=acc_id)		
 			cnum=cb.first_cheque_number
@@ -303,13 +419,14 @@ def e_chequeCancellation(request):
 			if n!=1:
 				return render_to_response('cheques/employeeMenu.html', {
 					'messagee': status,
+					'acc_nu': accn,
 					'messa': 1
 				}, context_instance=RequestContext(request))
 			elif m==1 or int(cheque_number) < cnum or int(cheque_number) > csize:
 				return render_to_response('cheques/e_chequeCancellation.html', {
 					'form': form,
 					'name': name,
-					'accnum': accn, 
+					'acc_nu': accn_r, 
 					'message': "Invalid Cheque number",
 				}, context_instance=RequestContext(request))
 			else:
@@ -326,19 +443,30 @@ def e_chequeCancellation(request):
 
 	for num in Account.objects.all():
 		a_num=num.account_number
-		if accn==a_num:
+		if accn_r==a_num:
 			name=num.name
 	return render_to_response('cheques/e_chequeCancellation.html', {
 				
 		'name': name,
-		'accnum': accn, 
+		'acc_nu': accn_r, 
 		'form': form,
 		}, context_instance=RequestContext(request))
+
+## Creates a cheque status form with the field:
+# cheque number - six digit number present on the cheque
 
 class ChequeStatusForm(forms.Form):
 	cheque_number = forms.IntegerField()
 
+
+## \brief User: Employee. Displays the status of the cheque if cheque number is valid
+# else: display the corresponding the error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "employeeMenu.html" if cheque number is valid,
+# else: "e_chequeStatus.html" with the display of error message
+
 def e_chequeStatus(request):
+	accn_r = request.GET.get('account_number','')
 	if request.method == 'POST':
 		form = ChequeStatusForm(request.POST)
 		if form.is_valid():
@@ -360,7 +488,7 @@ def e_chequeStatus(request):
 			m=0
 			for cn in Cheque.objects.all():
 				a_cn=cn.cheque_number
-				if cheque_number==a_cn:
+				if int(cheque_number)==int(a_cn):
 					m=1
 			cb=ChequeBook.objects.get(account_number=acc_id)		
 			cnum=cb.first_cheque_number
@@ -385,6 +513,11 @@ def e_chequeStatus(request):
     }, context_instance=RequestContext(request))
 
 
+## \brief User: Customer. Cancels the cheque if cheque number is valid
+# else: display the corresponding error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "customerMenu.html" if cheque cancellation is successful,
+# else: "c_chequeCancellation.html" with the display of error message
 
 def c_chequeCancellation(request):
 	if request.method == 'POST':
@@ -407,7 +540,7 @@ def c_chequeCancellation(request):
 			m=0
 			for cn in Cheque.objects.all():
 				a_cn=cn.cheque_number
-				if cheque_number==a_cn:
+				if int(cheque_number)==int(a_cn):
 					m=1
 			cb=ChequeBook.objects.get(account_number=acc_id)		
 			cnum=cb.first_cheque_number
@@ -446,6 +579,12 @@ def c_chequeCancellation(request):
 		}, context_instance=RequestContext(request))
 
 
+## \brief User: Customer. Displays the status of the cheque if cheque number is valid
+# else: display the corresponding the error message
+# @param request HttpRequest, the request created by user
+# @retval HttpResponse "customerMenu.html" if cheque number is valid,
+# else: "c_chequeStatus.html" with the display of error message
+
 def c_chequeStatus(request):
 	if request.method == 'POST':
 		form = ChequeStatusForm(request.POST)
@@ -467,7 +606,7 @@ def c_chequeStatus(request):
 			m=0
 			for cn in Cheque.objects.all():
 				a_cn=cn.cheque_number
-				if cheque_number==a_cn:
+				if int(cheque_number)==int(a_cn):
 					m=1
 			cb=ChequeBook.objects.get(account_number=acc_id)		
 			cnum=cb.first_cheque_number

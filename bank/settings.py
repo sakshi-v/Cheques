@@ -58,7 +58,7 @@ MEDIA_URL = ''
 ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '^arox(o)vb@)jpu*jrlfq&iz4ggn32gvim(v&3j)led@p%psac'
+SECRET_KEY = '(&o2f$5m!10jb(ic@1+psw!8qt2)-!$mrc2veyl%_esj%m=&al'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -90,8 +90,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
-	'cheques',
-	'django.contrib.admin'
+    'cheques',
+    'django.contrib.admin'
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
