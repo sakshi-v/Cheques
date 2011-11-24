@@ -1,0 +1,38 @@
+<html>
+<body>
+<center><h2> Cheque Cancellation </h2></center>
+<br><br><br><br>
+<center>
+
+<STRONG>{{ message }}</STRONG>
+<br><br>
+<table>
+<tr>
+<td>Account number:</td><td>{{ acc_nu }}</td>
+</tr>
+<tr></tr><tr></tr><tr></tr><tr></tr>
+<tr>
+<td>Name:</td><td>{{ name }}</td>
+</tr>
+<tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
+<tr></tr><tr></tr>
+<form action="/cheques/employeeMenu/e_chequeCancellation/?account_number={{ acc_nu }}" method="post">
+{% csrf_token %}
+ {{ form.non_field_errors }}
+<tr>
+<tr><th colspan="2">{{ form.cheque_number.errors }}</tr>
+<td>Cheque number:</td>
+<td>{{ form.cheque_number }} </td>
+</tr>
+<tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
+<tr></tr><tr></tr>
+<tr>
+<td><input type="submit" value="Cancel Cheque" /></td>
+</form>
+<td><a href="/cheques/employeeMenu/?account_number={{ acc_nu }}"><button type="button">Cancel</button></a></td>
+</tr>
+
+</table>
+</center>
+</body>
+</html>

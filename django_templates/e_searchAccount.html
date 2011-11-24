@@ -1,0 +1,30 @@
+<html>
+<body>
+<center><h2> Welcome to Cheques department </h2></center>
+<br><br><br><br><br>
+<center>
+{% if message %}<p><strong>{{ message }}</strong></p>{% endif %}
+<br>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+<h3> Enter the Account number </h3>
+
+
+
+<form action="/cheques/employeeLogin/e_searchAccount/" method="post">
+{% csrf_token %}
+
+
+ {{ form.non_field_errors }}
+<table>
+<tr><th colspan="1">
+{{ form.account_number.errors }}
+
+    {{ form.account_number }}
+</tr>
+</table>
+<input type="submit" value="Search" />
+</form>
+</center>
+</body>
+</html>

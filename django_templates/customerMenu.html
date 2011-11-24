@@ -1,0 +1,26 @@
+<html>
+<body>
+
+<center><h2>Cheque Menu</h2></center>
+<br><center>
+<h3>Welcome {{ name }}</h3>
+
+
+
+
+<STRONG>{% if messa %}<p><strong>Cheque has been {{ messagee }} and cannot be cancelled</strong></p>{% endif %}</STRONG>
+<STRONG>{% if mess %}<p><strong>Cheque has been {{ messag }}</strong></p>{% endif %}</STRONG>
+<STRONG>{{ message }}</STRONG>
+
+<br><br>
+<a href="/cheques/customerMenu/c_chequeCancellation/"><button type="button"><h4>Cancel Cheque</h4></button></a><br><br><br>
+
+<a href="/cheques/customerMenu/c_chequeStatus/"><button type="button"><h4>Cheque status</h4></button></a><br><br><br>
+
+<a href="/cheques/customerMenu/logoutCustomer/"><button type="button"><h4>Logout</h4></button></a>
+
+
+</center>
+</body>
+</html>
+

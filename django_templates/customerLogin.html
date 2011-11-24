@@ -1,0 +1,38 @@
+<html>
+<body>
+<center><h2> Customer Login </h2></center>
+<br><br><br><br><br>
+<center>
+{% if message %}<p><strong>{{ message }}</strong></p>{% endif %}
+<br>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+
+<form action="/cheques/customerLogin/" method="post">
+{% csrf_token %}
+
+
+ {{ form.non_field_errors }}
+<table>
+
+<table>
+<tr><th colspan="2">
+{{ form.username.errors }}</tr><tr>
+<td>Username:</td>
+<td>    {{ form.username }}</td>
+</tr>
+<tr><th colspan="2">
+{{ form.password.errors }}</tr><tr>
+<td>Password:</td>
+<td>    {{ form.password }} </td>
+</tr>
+<br><br>
+<tr><th colspan="2">
+<input type="submit" value="Login" />
+</form><a href="/cheques/"><button type='button'>Cancel</button></a>
+</tr>
+</table>
+</center>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<html>
+<body>
+<center><h2> Cheque Payment </h2></center>
+<br><br><br>
+<center>
+cnum: {{ cnum }}<p>
+cn: {{ cheque_number }}<p>
+csize: {{ csize }}<p>
+m: {{ m }}
+{{ acc_nu }}
+<table>
+<tr><td><strong>Drawee</strong></td><td></td></tr>
+<tr></tr>
+
+<tr>
+<td>Name:</td><td>{{name}}</td>
+</tr>
+<tr>
+<td>Balance:</td><td>{{balance}}</td>
+</tr>
+<form action="/cheques/employeeMenu/e_chequePayment/?account_number={{ acc_nu }}" method="post">
+{% csrf_token %}
+ {{ form.non_field_errors }}
+
+<tr>
+<tr><th colspan="2">{{ form.cheque_number.errors }}</tr>
+<tr><th colspan="2">{{ message }}</tr>
+<td>Cheque number:</td>
+<td>{{ form.cheque_number }} </td>
+</tr>
+
+<tr>
+<tr><th colspan="2">{{ form.amount.errors }}</tr>
+<td>Amount:</td>
+<td>{{ form.amount }}</td>
+</tr>
+
+<tr>
+<tr><th colspan="2">{{ form.cheque_date.errors }}</tr>
+<tr><th colspan="2">{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}</tr>
+<td>Cheque date:</td>
+<td>{{ form.cheque_date }}(yyyy-mm-dd) </td>
+</tr>
+<tr></tr>
+<tr><td><strong>Payee</strong></td><td></td></tr>
+<tr></tr>
+
+<tr>
+<tr><th colspan="2">{{ form.payee_name.errors }}</tr>
+<td>Name:</td>
+<td>{{ form.payee_name }} </td>
+</tr>
+<tr>
+<td><input type="submit" value="Transmit" /></td>
+</form>
+<td><a href="/cheques/employeeMenu/?account_number={{ acc_nu }}"><button type='button'>Cancel</button></a></td>
+</table>
+
+
+</center>
+</body>
+</html>
