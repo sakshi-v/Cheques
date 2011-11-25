@@ -8,7 +8,7 @@
 <br><br>
 <table>
 <tr>
-<td>Account number:</td><td>{{ accnum }}</td>
+<td>Account number:</td><td>{{ acc_nu }}</td>
 </tr>
 <tr></tr><tr></tr><tr></tr><tr></tr>
 <tr>
@@ -16,7 +16,7 @@
 </tr>
 <tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr><tr></tr>
 <tr></tr><tr></tr>
-<form action="/cheques/employeeMenu/e_chequeCancellation/" method="post">
+<form action="/cheques/employeeMenu/e_chequeCancellation/?account_number={{ acc_nu }}" method="post">
 {% csrf_token %}
  {{ form.non_field_errors }}
 <tr>
@@ -29,7 +29,7 @@
 <tr>
 <td><input type="submit" value="Cancel Cheque" /></td>
 </form>
-<td><a href="/cheques/employeeMenu/"><button type="button">Cancel</button></a></td>
+<td><a href="/cheques/employeeMenu/?account_number={{ acc_nu }}"><button type="button">Cancel</button></a></td>
 </tr>
 
 </table>

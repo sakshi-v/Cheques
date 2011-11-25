@@ -3,17 +3,18 @@
 <center><h2> Cheque Payment </h2></center>
 <br><br><br>
 <center>
+
 <table>
 <tr><td><strong>Drawee</strong></td><td></td></tr>
 <tr></tr>
-{{ cnu }}
+
 <tr>
 <td>Name:</td><td>{{name}}</td>
 </tr>
 <tr>
 <td>Balance:</td><td>{{balance}}</td>
 </tr>
-<form action="/cheques/employeeMenu/e_chequePayment/" method="post">
+<form action="/cheques/employeeMenu/e_chequePayment/?account_number={{ acc_nu }}" method="post">
 {% csrf_token %}
  {{ form.non_field_errors }}
 
@@ -48,7 +49,7 @@
 <tr>
 <td><input type="submit" value="Transmit" /></td>
 </form>
-<td><a href="/cheques/employeeMenu/"><button type='button'>Cancel</button></a></td>
+<td><a href="/cheques/employeeMenu/?account_number={{ acc_nu }}"><button type='button'>Cancel</button></a></td>
 </table>
 
 

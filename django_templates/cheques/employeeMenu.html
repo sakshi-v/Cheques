@@ -4,18 +4,17 @@
 <center><h2>Cheque Menu</h2></center>
 <br>
 
-
 <center>
 <STRONG>{% if messa %}<p><strong>Cheque has been {{ messagee }} and cannot be cancelled</strong></p>{% endif %}</STRONG>
 <STRONG>{% if mess %}<p><strong>Cheque has been {{ messag }}</strong></p>{% endif %}</STRONG>
 <STRONG>{{ message }}</STRONG>
 
 <br><br>
-<a href="/cheques/employeeMenu/e_issueChequeBook/"><button type="button"><h4>Issue Cheque-Book</h4></button></a><br><br>
+<a href="/cheques/employeeMenu/e_issueChequeBook/?account_number={{ acc_nu }}"><button type="button"><h4>Issue Cheque-Book</h4></button></a><br><br>
 
-<a href="/cheques/employeeMenu/e_chequePayment/"><button type="button"><h4>Cheque Payment</h4></button></a><br><br>
+<a href="/cheques/employeeMenu/e_chequePayment/?account_number={{ acc_nu }}"><button type="button"><h4>Cheque Payment</h4></button></a><br><br>
 
-<a href="/cheques/employeeMenu/e_chequeCancellation/"><button type="button"><h4>Cheque Cancellation</h4></button></a><br><br>
+<a href="/cheques/employeeMenu/e_chequeCancellation/?account_number={{ acc_nu }}"><button type="button"><h4>Cheque Cancellation</h4></button></a><br><br>
 
 <a href="/cheques/employeeMenu/e_chequeStatus/"><button type="button"><h4>Cheque status</h4></button></a><br><br>
 
